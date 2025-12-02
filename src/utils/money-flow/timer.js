@@ -16,7 +16,7 @@ export const TimerManager = {
     countUp: { value: 0 },
     workStatus: '',
     initialWorkProgress: 0,
-    initialWorkedSeconds: 0,
+    initialWorkedSeconds: 0
   },
 
   getCurrentTimeDecimal() {
@@ -35,9 +35,14 @@ export const TimerManager = {
 
     let calculatedWorkHoursValue
     if (isWorkDayCrossing) {
-      calculatedWorkHoursValue = new Decimal(24).minus(startTime).plus(endTime).toNumber()
+      calculatedWorkHoursValue = new Decimal(24)
+        .minus(startTime)
+        .plus(endTime)
+        .toNumber()
     } else {
-      calculatedWorkHoursValue = new Decimal(endTime).minus(startTime).toNumber()
+      calculatedWorkHoursValue = new Decimal(endTime)
+        .minus(startTime)
+        .toNumber()
     }
 
     if (isWorkDayCrossing) {
@@ -46,14 +51,27 @@ export const TimerManager = {
 
         let workedHours
         if (currentTimeAdjusted >= startTime) {
-          workedHours = new Decimal(currentTimeAdjusted).minus(startTime).toNumber()
+          workedHours = new Decimal(currentTimeAdjusted)
+            .minus(startTime)
+            .toNumber()
         } else {
-          workedHours = new Decimal(24).minus(startTime).plus(currentTimeAdjusted).toNumber()
+          workedHours = new Decimal(24)
+            .minus(startTime)
+            .plus(currentTimeAdjusted)
+            .toNumber()
         }
 
-        this.data.initialWorkProgress = new Decimal(workedHours).dividedBy(calculatedWorkHoursValue).times(100).toNumber()
-        this.data.currentEarnings = new Decimal(hourlyRate).times(workedHours).toNumber()
-        this.data.initialWorkedSeconds = new Decimal(workedHours).times(3600).floor().toNumber()
+        this.data.initialWorkProgress = new Decimal(workedHours)
+          .dividedBy(calculatedWorkHoursValue)
+          .times(100)
+          .toNumber()
+        this.data.currentEarnings = new Decimal(hourlyRate)
+          .times(workedHours)
+          .toNumber()
+        this.data.initialWorkedSeconds = new Decimal(workedHours)
+          .times(3600)
+          .floor()
+          .toNumber()
       } else {
         if (currentTimeAdjusted < startTime && currentTimeAdjusted >= endTime) {
           this.data.workStatus = 'before_work'
@@ -63,19 +81,34 @@ export const TimerManager = {
         } else {
           this.data.workStatus = 'after_work'
           this.data.initialWorkProgress = 100
-          this.data.currentEarnings = new Decimal(hourlyRate).times(calculatedWorkHoursValue).toNumber()
-          this.data.initialWorkedSeconds = new Decimal(calculatedWorkHoursValue).times(3600).floor().toNumber()
+          this.data.currentEarnings = new Decimal(hourlyRate)
+            .times(calculatedWorkHoursValue)
+            .toNumber()
+          this.data.initialWorkedSeconds = new Decimal(calculatedWorkHoursValue)
+            .times(3600)
+            .floor()
+            .toNumber()
         }
       }
     } else {
       if (currentTimeAdjusted >= startTime && currentTimeAdjusted < endTime) {
         this.data.workStatus = 'working'
 
-        const workedHours = new Decimal(currentTimeAdjusted).minus(startTime).toNumber()
+        const workedHours = new Decimal(currentTimeAdjusted)
+          .minus(startTime)
+          .toNumber()
 
-        this.data.initialWorkProgress = new Decimal(workedHours).dividedBy(calculatedWorkHoursValue).times(100).toNumber()
-        this.data.currentEarnings = new Decimal(hourlyRate).times(workedHours).toNumber()
-        this.data.initialWorkedSeconds = new Decimal(workedHours).times(3600).floor().toNumber()
+        this.data.initialWorkProgress = new Decimal(workedHours)
+          .dividedBy(calculatedWorkHoursValue)
+          .times(100)
+          .toNumber()
+        this.data.currentEarnings = new Decimal(hourlyRate)
+          .times(workedHours)
+          .toNumber()
+        this.data.initialWorkedSeconds = new Decimal(workedHours)
+          .times(3600)
+          .floor()
+          .toNumber()
       } else if (currentTimeAdjusted < startTime) {
         this.data.workStatus = 'before_work'
         this.data.initialWorkProgress = 0
@@ -84,14 +117,21 @@ export const TimerManager = {
       } else {
         this.data.workStatus = 'after_work'
         this.data.initialWorkProgress = 100
-        this.data.currentEarnings = new Decimal(hourlyRate).times(calculatedWorkHoursValue).toNumber()
-        this.data.initialWorkedSeconds = new Decimal(calculatedWorkHoursValue).times(3600).floor().toNumber()
+        this.data.currentEarnings = new Decimal(hourlyRate)
+          .times(calculatedWorkHoursValue)
+          .toNumber()
+        this.data.initialWorkedSeconds = new Decimal(calculatedWorkHoursValue)
+          .times(3600)
+          .floor()
+          .toNumber()
       }
     }
 
     this.data.lastCoinMilestone = Math.floor(this.data.currentEarnings)
     this.data.countUp.value = this.data.currentEarnings
-    this.data.totalExpectedEarnings = new Decimal(hourlyRate).times(calculatedWorkHoursValue).toNumber()
+    this.data.totalExpectedEarnings = new Decimal(hourlyRate)
+      .times(calculatedWorkHoursValue)
+      .toNumber()
 
     return {
       workStatus: this.data.workStatus,
@@ -99,7 +139,7 @@ export const TimerManager = {
       initialWorkedSeconds: this.data.initialWorkedSeconds,
       currentEarnings: this.data.currentEarnings,
       lastCoinMilestone: this.data.lastCoinMilestone,
-      totalExpectedEarnings: this.data.totalExpectedEarnings,
+      totalExpectedEarnings: this.data.totalExpectedEarnings
     }
   },
 
@@ -128,8 +168,8 @@ export const TimerManager = {
         initialWorkedSeconds: this.data.initialWorkedSeconds,
         currentEarnings: this.data.currentEarnings,
         totalExpectedEarnings: this.data.totalExpectedEarnings,
-        elapsedTime: this.data.elapsedTime,
-      },
+        elapsedTime: this.data.elapsedTime
+      }
     }
   },
 
@@ -140,20 +180,30 @@ export const TimerManager = {
   },
 
   updateTimer(config, callbacks = {}) {
-    const { perSecondRate, onUpdate } = config
+    const { perSecondRate } = config
+    const { onUpdate } = callbacks
 
     const now = dayjs().valueOf()
     this.data.systemTime = dayjs()
-    const deltaSeconds = new Decimal(now).minus(this.data.currentTime).dividedBy(1000).toNumber()
+    const deltaSeconds = new Decimal(now)
+      .minus(this.data.currentTime)
+      .dividedBy(1000)
+      .toNumber()
     this.data.currentTime = now
 
     if (this.data.workStatus === 'working') {
-      this.data.elapsedTime = new Decimal(this.data.elapsedTime).plus(deltaSeconds).toNumber()
+      this.data.elapsedTime = new Decimal(this.data.elapsedTime)
+        .plus(deltaSeconds)
+        .toNumber()
     }
 
     if (this.data.workStatus === 'working') {
-      const incrementalEarnings = new Decimal(perSecondRate).times(deltaSeconds).toNumber()
-      this.data.currentEarnings = new Decimal(this.data.currentEarnings).plus(incrementalEarnings).toNumber()
+      const incrementalEarnings = new Decimal(perSecondRate)
+        .times(deltaSeconds)
+        .toNumber()
+      this.data.currentEarnings = new Decimal(this.data.currentEarnings)
+        .plus(incrementalEarnings)
+        .toNumber()
     }
 
     const currentWholeYuan = Math.floor(this.data.currentEarnings)
@@ -172,7 +222,10 @@ export const TimerManager = {
       }
     }
 
-    EffectsManager.animateNumberUpdate(this.data.countUp, this.data.currentEarnings)
+    EffectsManager.animateNumberUpdate(
+      this.data.countUp,
+      this.data.currentEarnings
+    )
 
     if (this.data.workStatus === 'after_work') {
       const progressBar = document.querySelector('.progress-bar')
@@ -195,13 +248,13 @@ export const TimerManager = {
         workStatus: this.data.workStatus,
         initialWorkedSeconds: this.data.initialWorkedSeconds,
         totalExpectedEarnings: this.data.totalExpectedEarnings,
-        timeUntilEnd: this.getTimeUntilEnd(config),
+        timeUntilEnd: this.getTimeUntilEnd(config)
       })
     }
   },
 
   getTimeUntilEnd(config) {
-    const { endTime } = config
+    const { endTime, startTime } = config
 
     if (this.data.workStatus === 'after_work') {
       return 0
@@ -219,19 +272,28 @@ export const TimerManager = {
 
     const endHour = Math.floor(endTime)
     const endMinute = Math.round((endTime - endHour) * 60)
-    const endTimeInSeconds = new Decimal(endHour).times(3600).plus(new Decimal(endMinute).times(60))
+    const endTimeInSeconds = new Decimal(endHour)
+      .times(3600)
+      .plus(new Decimal(endMinute).times(60))
 
-    if (endTime < config.startTime) {
+    let result = 0
+    if (endTime < startTime) {
+      // 跨天情况
       if (currentTimeInSeconds.lessThan(endTimeInSeconds)) {
-        return endTimeInSeconds.minus(currentTimeInSeconds).toNumber()
+        result = endTimeInSeconds.minus(currentTimeInSeconds).toNumber()
       } else {
-        return new Decimal(24 * 3600).minus(currentTimeInSeconds).plus(endTimeInSeconds).toNumber()
+        result = new Decimal(24 * 3600)
+          .minus(currentTimeInSeconds)
+          .plus(endTimeInSeconds)
+          .toNumber()
       }
     } else if (currentTimeInSeconds.lessThan(endTimeInSeconds)) {
-      return endTimeInSeconds.minus(currentTimeInSeconds).toNumber()
+      result = endTimeInSeconds.minus(currentTimeInSeconds).toNumber()
     } else {
-      return 0
+      result = 0
     }
+
+    return result
   },
 
   formatTime(seconds) {
@@ -255,7 +317,7 @@ export const TimerManager = {
       initialWorkedSeconds: this.data.initialWorkedSeconds,
       totalExpectedEarnings: this.data.totalExpectedEarnings,
       progressPercentage: this.getProgressPercentage(),
-      systemTime: this.data.systemTime,
+      systemTime: this.data.systemTime
     }
   },
 
@@ -263,10 +325,14 @@ export const TimerManager = {
     if (!calculatedWorkHours || calculatedWorkHours <= 0) return 0
 
     const totalSeconds = new Decimal(calculatedWorkHours).times(3600)
-    const percentage = new Decimal(this.data.elapsedTime).dividedBy(totalSeconds).times(100)
+    const percentage = new Decimal(this.data.elapsedTime)
+      .dividedBy(totalSeconds)
+      .times(100)
 
-    const totalPercentage = new Decimal(this.data.initialWorkProgress).plus(percentage)
+    const totalPercentage = new Decimal(this.data.initialWorkProgress).plus(
+      percentage
+    )
 
     return Math.min(100, Math.max(0, totalPercentage.toFixed(1)))
-  },
+  }
 }
