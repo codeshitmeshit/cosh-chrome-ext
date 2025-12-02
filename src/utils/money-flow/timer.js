@@ -270,6 +270,3 @@ export const TimerManager = {
     return Math.min(100, Math.max(0, totalPercentage.toFixed(1)))
   },
 }
-
-
-

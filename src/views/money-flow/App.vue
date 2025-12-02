@@ -26,10 +26,10 @@
 <script>
 import { computed, onMounted, ref } from 'vue'
 import { Decimal } from 'decimal.js'
-import { TimerManager } from './utils/timer'
-import { EffectsManager } from './utils/effects'
-import SetupForm from './components/SetupForm.vue'
-import SalaryDisplay from './components/SalaryDisplay.vue'
+import { TimerManager } from '~/utils/money-flow/timer'
+import { EffectsManager } from '~/utils/money-flow/effects'
+import SetupForm from '~/components/money-flow/SetupForm.vue'
+import SalaryDisplay from '~/components/money-flow/SalaryDisplay.vue'
 
 export default {
   name: 'MoneyFlowApp',

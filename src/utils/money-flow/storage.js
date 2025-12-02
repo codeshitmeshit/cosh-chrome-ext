@@ -16,5 +16,3 @@ export const StorageUtils = {
     return null
   },
 }
-
-

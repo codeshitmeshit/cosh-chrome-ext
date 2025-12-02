@@ -24,9 +24,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import MoneyFlowApp from '~/money-flow/App.vue'
-// @ts-expect-error: Vue SFC 默认导出由构建工具处理
-import SettingsPanel from './components/SettingsPanel.vue'
+import MoneyFlowApp from '~/views/money-flow/App.vue'
+import SettingsPanel from '~/components/SettingsPanel.vue'
 
 type PanelKey = 'moneyFlow' | 'settings'
 

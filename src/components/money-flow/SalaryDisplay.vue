@@ -68,7 +68,7 @@
 <script>
 import { computed } from 'vue'
 import { Decimal } from 'decimal.js'
-import { TimerManager } from '../utils/timer'
+import { TimerManager } from '~/utils/money-flow/timer'
 
 export default {
   name: 'SalaryDisplay',
@@ -276,5 +276,3 @@ export default {
   }
 }
 </style>
-
-

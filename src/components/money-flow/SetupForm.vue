@@ -79,8 +79,8 @@ import {
   computed, onMounted, reactive, ref,
 } from 'vue'
 import { Decimal } from 'decimal.js'
-import { AppConfig } from '../config'
-import { StorageUtils } from '../utils/storage'
+import { AppConfig } from '~/config/money-flow'
+import { StorageUtils } from '~/utils/money-flow/storage'
 
 export default {
   name: 'SetupForm',
@@ -226,5 +226,3 @@ export default {
   }
 }
 </style>
-
-
