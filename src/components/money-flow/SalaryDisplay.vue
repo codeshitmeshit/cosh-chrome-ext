@@ -84,9 +84,23 @@
       </el-col>
     </el-row>
 
-    <el-button type="danger" @click="resetSettings" class="w-100" size="large">
-      重新设置
-    </el-button>
+    <el-row :gutter="8">
+      <el-col :span="12">
+        <el-button type="primary" @click="startNow" class="w-100" size="large">
+          现在上班
+        </el-button>
+      </el-col>
+      <el-col :span="12">
+        <el-button
+          type="danger"
+          @click="resetSettings"
+          class="w-100"
+          size="large"
+        >
+          重新设置
+        </el-button>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -97,7 +111,7 @@ import { TimerManager } from '~/utils/money-flow/timer'
 
 export default {
   name: 'SalaryDisplay',
-  emits: ['reset-settings'],
+  emits: ['reset-settings', 'start-now'],
 
   props: {
     currentEarnings: {
@@ -283,6 +297,10 @@ export default {
       emit('reset-settings')
     }
 
+    const startNow = () => {
+      emit('start-now')
+    }
+
     const formatTime = (seconds) => {
       return TimerManager.formatTime(seconds)
     }
@@ -300,6 +318,7 @@ export default {
       progressStatus,
       totalWorkedTime,
       resetSettings,
+      startNow,
       formatTime,
       toggleAmountVisibility,
       toggleTotalExpectedVisibility,

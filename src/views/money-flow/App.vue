@@ -18,6 +18,7 @@
         :total-expected-earnings="totalExpectedEarnings"
         :time-until-end="timeUntilEnd"
         @reset-settings="resetSettings"
+        @start-now="startNow"
       />
     </el-card>
   </div>
@@ -102,6 +103,109 @@ export default {
       currentEarnings.value = state.currentEarnings
       workStatus.value = state.workStatus
       timeUntilEnd.value = state.timeUntilEnd
+    }
+
+    // 将时间向下取整到最接近的 0.5 小时（用于"现在上班"功能）
+    const floorToNearestHalfHour = (timeDecimal) => {
+      return Math.floor(timeDecimal * 2) / 2
+    }
+
+    // 现在上班：将上班时间调整为当前时间
+    const startNow = () => {
+      // 停止当前定时器
+      TimerManager.stopTimer()
+
+      // 获取当前精确时间（不四舍五入，直接使用精确值）
+      // 这样可以确保当前时间 >= 上班时间，已工作时长从0开始
+      const currentTimeDecimal = TimerManager.getCurrentTimeDecimal()
+      // 使用当前精确时间，而不是四舍五入
+      const newStartTime = currentTimeDecimal
+
+      // 加载现有设置
+      const savedSettings = StorageUtils.loadSettings()
+      if (!savedSettings) {
+        // 如果没有保存的设置，无法使用此功能
+        return
+      }
+
+      // 更新上班时间为当前精确时间
+      const updatedSettings = {
+        ...savedSettings,
+        startTime: newStartTime
+      }
+
+      // 保存更新后的设置
+      StorageUtils.saveSettings(updatedSettings)
+
+      // 重新启动定时器
+      const { salaryType, salaryAmount, endTime } = updatedSettings
+
+      // 计算工作时长
+      let calculatedWorkHours
+      if (endTime >= newStartTime) {
+        calculatedWorkHours = new Decimal(endTime)
+          .minus(newStartTime)
+          .toNumber()
+      } else {
+        calculatedWorkHours = new Decimal(24)
+          .minus(newStartTime)
+          .plus(endTime)
+          .toNumber()
+      }
+
+      if (calculatedWorkHours <= 0) {
+        return
+      }
+
+      // 计算时薪
+      let hourlyRate = 0
+      if (salaryType === 'monthly') {
+        hourlyRate = new Decimal(salaryAmount)
+          .dividedBy(21.75)
+          .dividedBy(calculatedWorkHours)
+          .toNumber()
+      } else if (salaryType === 'daily') {
+        hourlyRate = new Decimal(salaryAmount)
+          .dividedBy(calculatedWorkHours)
+          .toNumber()
+      } else {
+        hourlyRate = parseFloat(salaryAmount)
+      }
+
+      if (hourlyRate <= 0) {
+        return
+      }
+
+      // 计算每秒收入
+      const perSecondRateValue = new Decimal(hourlyRate)
+        .dividedBy(3600)
+        .toNumber()
+
+      // 启动定时器
+      const config = {
+        salaryType,
+        salaryAmount,
+        startTime: newStartTime,
+        endTime,
+        hourlyRate,
+        calculatedWorkHours,
+        perSecondRate: perSecondRateValue
+      }
+
+      startTimer(config)
+
+      // 强制重置初始状态为0，确保从当前时间开始计算
+      // 因为 calculateWorkStatus 可能会因为时间精度问题计算出很小的已工作时长
+      TimerManager.data.initialWorkProgress = 0
+      TimerManager.data.initialWorkedSeconds = 0
+      TimerManager.data.currentEarnings = 0
+      TimerManager.data.elapsedTime = 0
+
+      // 更新显示状态
+      initialWorkedSeconds.value = 0
+      currentEarnings.value = 0
+      elapsedTime.value = 0
+      initialWorkProgress.value = 0
     }
 
     // 根据保存的设置自动启动计时器
@@ -195,7 +299,8 @@ export default {
       timeUntilEnd,
       progressPercentage,
       startTimer,
-      resetSettings
+      resetSettings,
+      startNow
     }
   }
 }

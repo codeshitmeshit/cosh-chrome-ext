@@ -61,6 +61,12 @@ export const TimerManager = {
             .toNumber()
         }
 
+        // 如果已工作时长小于2分钟（0.033小时），认为是刚开始上班，重置为0
+        // 这样可以避免时间精度问题导致的微小已工作时长
+        if (workedHours < 0.033) {
+          workedHours = 0
+        }
+
         this.data.initialWorkProgress = new Decimal(workedHours)
           .dividedBy(calculatedWorkHoursValue)
           .times(100)
@@ -94,9 +100,15 @@ export const TimerManager = {
       if (currentTimeAdjusted >= startTime && currentTimeAdjusted < endTime) {
         this.data.workStatus = 'working'
 
-        const workedHours = new Decimal(currentTimeAdjusted)
+        let workedHours = new Decimal(currentTimeAdjusted)
           .minus(startTime)
           .toNumber()
+
+        // 如果已工作时长小于2分钟（0.033小时），认为是刚开始上班，重置为0
+        // 这样可以避免时间精度问题导致的微小已工作时长
+        if (workedHours < 0.033) {
+          workedHours = 0
+        }
 
         this.data.initialWorkProgress = new Decimal(workedHours)
           .dividedBy(calculatedWorkHoursValue)
