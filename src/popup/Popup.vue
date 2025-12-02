@@ -1,37 +1,52 @@
 <template>
   <main class="popup-shell">
     <aside class="popup-sidebar">
-      <button
-        v-for="item in menuItems"
-        :key="item.key"
-        class="sidebar-item"
-        :class="{ active: activePanel === item.key }"
-        type="button"
-        @click="activePanel = item.key"
-      >
-        <span class="sidebar-icon">{{ item.icon }}</span>
-      </button>
+      <div class="sidebar-main">
+        <button
+          v-for="item in mainMenuItems"
+          :key="item.key"
+          class="sidebar-item"
+          :class="{ active: activePanel === item.key }"
+          type="button"
+          @click="handleMenuClick(item.key)"
+        >
+          <span class="sidebar-icon">{{ item.icon }}</span>
+        </button>
+      </div>
+      <div class="sidebar-footer">
+        <button
+          class="sidebar-item"
+          :class="{ active: activePanel === 'about' }"
+          type="button"
+          @click="handleMenuClick('about')"
+        >
+          <span class="sidebar-icon">ℹ️</span>
+        </button>
+      </div>
     </aside>
 
-    <section class="popup-content">
+    <section ref="contentRef" class="popup-content">
       <div class="popup-scale">
         <MoneyFlowApp v-if="activePanel === 'moneyFlow'" />
         <SettingsPanel v-else-if="activePanel === 'settings'" />
+        <AboutPanel v-else-if="activePanel === 'about'" />
       </div>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import MoneyFlowApp from '~/views/money-flow/App.vue'
 import SettingsPanel from '~/components/SettingsPanel.vue'
+import AboutPanel from '~/components/AboutPanel.vue'
 
-type PanelKey = 'moneyFlow' | 'settings'
+type PanelKey = 'moneyFlow' | 'settings' | 'about'
 
 const activePanel = ref<PanelKey>('moneyFlow')
+const contentRef = ref<HTMLElement | null>(null)
 
-const menuItems: Array<{ key: PanelKey; icon: string }> = [
+const mainMenuItems: Array<{ key: PanelKey; icon: string }> = [
   {
     key: 'moneyFlow',
     icon: '💰'
@@ -41,6 +56,29 @@ const menuItems: Array<{ key: PanelKey; icon: string }> = [
     icon: '⚙️'
   }
 ]
+
+const scrollToTop = () => {
+  nextTick(() => {
+    if (contentRef.value) {
+      contentRef.value.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      })
+    }
+    // 同时滚动 window 和 document 到顶部（兼容性处理）
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  })
+}
+
+const handleMenuClick = (key: PanelKey) => {
+  activePanel.value = key
+  scrollToTop()
+}
 </script>
 
 <style scoped>
@@ -61,6 +99,21 @@ const menuItems: Array<{ key: PanelKey; icon: string }> = [
   background: rgba(0, 0, 0, 0.4);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(10px);
+}
+
+.sidebar-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
 }
 
 .sidebar-item {
