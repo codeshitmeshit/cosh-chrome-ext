@@ -2,6 +2,23 @@
 
 /* 以下样式来自 money-flow-vue 的主样式，略有路径调整以适配扩展环境 */
 
+/* 确保弹窗根节点固定为当前 420x600 视口并且不出现滚动条（不改变现有视觉样式） */
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 在不改变布局的前提下，隐藏根节点上的滚动条（Chrome 扩展 popup） */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#app::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 :root {
   --primary-color: #8a2be2;
   --secondary-color: #ff3e78;
