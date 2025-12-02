@@ -1,8 +1,20 @@
 <template>
   <div class="salary-display">
     <div class="current-earning-container">
-      <h2 class="mb-2">当前已赚取</h2>
-      <div class="earning-value">¥{{ formattedEarnings }}</div>
+      <div class="earning-header">
+        <h2 class="mb-2">当前已赚取</h2>
+        <button
+          @click="toggleAmountVisibility"
+          class="visibility-toggle"
+          :title="isAmountVisible ? '隐藏金额' : '显示金额'"
+          type="button"
+        >
+          {{ isAmountVisible ? '👁️' : '🚫' }}
+        </button>
+      </div>
+      <div class="earning-value" :data-amount-visible="isAmountVisible">
+        ¥{{ displayEarnings }}
+      </div>
     </div>
 
     <el-tag :type="workStatusTagType" size="large" class="work-status-tag">
@@ -54,19 +66,14 @@
       </el-col>
     </el-row>
 
-    <el-button
-      type="danger"
-      @click="stopTimer"
-      class="w-100"
-      size="large"
-    >
+    <el-button type="danger" @click="stopTimer" class="w-100" size="large">
       下班
     </el-button>
   </div>
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Decimal } from 'decimal.js'
 import { TimerManager } from '~/utils/money-flow/timer'
 
@@ -77,42 +84,76 @@ export default {
   props: {
     currentEarnings: {
       type: Number,
-      default: 0,
+      default: 0
     },
     elapsedTime: {
       type: Number,
-      default: 0,
+      default: 0
     },
     workStatus: {
       type: String,
-      default: 'working',
+      default: 'working'
     },
     progressPercentage: {
       type: Number,
-      default: 0,
+      default: 0
     },
     initialWorkedSeconds: {
       type: Number,
-      default: 0,
+      default: 0
     },
     perSecondRate: {
       type: Number,
-      default: 0,
+      default: 0
     },
     totalExpectedEarnings: {
       type: Number,
-      default: 0,
+      default: 0
     },
     timeUntilEnd: {
       type: Number,
-      default: 0,
-    },
+      default: 0
+    }
   },
 
   setup(props, { emit }) {
+    const STORAGE_KEY = 'moneyFlowAmountVisible'
+
+    // 同步读取 localStorage，确保初始值正确
+    let initialVisibility = true
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved !== null) {
+        initialVisibility = JSON.parse(saved)
+      }
+    } catch (error) {
+      console.error('加载金额显示状态失败:', error)
+    }
+
+    const isAmountVisible = ref(initialVisibility)
+
     const formattedEarnings = computed(() => {
       return new Decimal(props.currentEarnings).toFixed(2)
     })
+
+    // 优化：当隐藏时直接返回占位符，避免响应式更新触发重新计算
+    const displayEarnings = computed(() => {
+      // 如果不可见，直接返回占位符，不依赖 formattedEarnings
+      if (!isAmountVisible.value) {
+        return '*.**'
+      }
+      // 可见时才计算并返回实际金额
+      return formattedEarnings.value
+    })
+
+    const toggleAmountVisibility = () => {
+      isAmountVisible.value = !isAmountVisible.value
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(isAmountVisible.value))
+      } catch (error) {
+        console.error('保存金额显示状态失败:', error)
+      }
+    }
 
     const workStatusText = computed(() => {
       switch (props.workStatus) {
@@ -141,13 +182,14 @@ export default {
     })
 
     const progressStatus = computed(() => {
-      if (props.progressPercentage >= 100)
-        return 'success'
+      if (props.progressPercentage >= 100) return 'success'
       return ''
     })
 
     const totalWorkedTime = computed(() => {
-      return new Decimal(props.initialWorkedSeconds).plus(props.elapsedTime).toNumber()
+      return new Decimal(props.initialWorkedSeconds)
+        .plus(props.elapsedTime)
+        .toNumber()
     })
 
     const stopTimer = () => {
@@ -159,15 +201,18 @@ export default {
     }
 
     return {
+      isAmountVisible,
       formattedEarnings,
+      displayEarnings,
       workStatusText,
       workStatusTagType,
       progressStatus,
       totalWorkedTime,
       stopTimer,
       formatTime,
+      toggleAmountVisibility
     }
-  },
+  }
 }
 </script>
 
@@ -182,6 +227,45 @@ export default {
 
 .mb-2 {
   margin-bottom: 8px;
+}
+
+.earning-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.earning-header h2 {
+  margin: 0;
+  flex: 1;
+}
+
+.visibility-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  font-size: 18px;
+  padding: 4px 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.visibility-toggle:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.visibility-toggle:active {
+  transform: scale(0.95);
 }
 
 .mb-4 {

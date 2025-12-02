@@ -5,12 +5,10 @@ export const EffectsManager = {
   particlesInitialized: false,
 
   initParticles() {
-    if (this.particlesInitialized)
-      return
+    if (this.particlesInitialized) return
 
     const particlesContainer = document.getElementById('particles-container')
-    if (!particlesContainer)
-      return
+    if (!particlesContainer) return
 
     const particleCount = 50
 
@@ -22,8 +20,7 @@ export const EffectsManager = {
   },
 
   createParticle(container) {
-    if (!container)
-      return
+    if (!container) return
 
     const particle = document.createElement('div')
     particle.classList.add('particle')
@@ -56,19 +53,18 @@ export const EffectsManager = {
       delay,
       repeat: -1,
       yoyo: true,
-      ease: 'sine.inOut',
+      ease: 'sine.inOut'
     })
 
     container.appendChild(particle)
   },
 
   celebrateWithConfetti(size = 'medium') {
-    if (typeof confetti !== 'function')
-      return
+    if (typeof confetti !== 'function') return
 
     const options = {
       origin: { y: 0.6 },
-      colors: ['#FFD700', '#FFDF00', '#F0E68C', '#DAA520', '#FFA500'],
+      colors: ['#FFD700', '#FFDF00', '#F0E68C', '#DAA520', '#FFA500']
     }
 
     switch (size) {
@@ -93,8 +89,7 @@ export const EffectsManager = {
 
   dropCoins(numberOfCoins = 20) {
     const coinsContainer = document.getElementById('coins-container')
-    if (!coinsContainer)
-      return
+    if (!coinsContainer) return
 
     for (let i = 0; i < numberOfCoins; i++) {
       setTimeout(() => {
@@ -115,37 +110,42 @@ export const EffectsManager = {
           ease: 'power1.in',
           onComplete: () => {
             coin.remove()
-          },
+          }
         })
       }, i * 100)
     }
   },
 
   animateNumberUpdate(element, value, duration = 0.2) {
-    if (!element)
-      return
+    if (!element) return
 
     gsap.to(element, {
       value,
       duration,
       onUpdate: () => {
         const earningElement = document.querySelector('.earning-value')
-        if (earningElement)
-          earningElement.textContent = `¥${element.value.toFixed(2)}`
-      },
+        if (earningElement) {
+          // 检查金额是否应该显示（通过 data-amount-visible 属性）
+          const shouldShowAmount =
+            earningElement.getAttribute('data-amount-visible') !== 'false'
+          // 如果金额被隐藏，不更新 DOM，让 Vue 的响应式系统处理
+          if (shouldShowAmount) {
+            earningElement.textContent = `¥${element.value.toFixed(2)}`
+          }
+        }
+      }
     })
   },
 
   applyPageAnimations() {
     const panel = document.querySelector('.glass-panel')
-    if (!panel)
-      return
+    if (!panel) return
 
     gsap.from(panel, {
       opacity: 0,
       y: 30,
       duration: 1,
-      ease: 'power3.out',
+      ease: 'power3.out'
     })
   },
 
@@ -162,8 +162,10 @@ export const EffectsManager = {
         onUpdate() {
           const target = this.targets()[0]
           if (target)
-            target.innerHTML = `¥${parseFloat(target.textContent || '0').toFixed(2)}`
-        },
+            target.innerHTML = `¥${parseFloat(
+              target.textContent || '0'
+            ).toFixed(2)}`
+        }
       })
     }
 
@@ -172,21 +174,20 @@ export const EffectsManager = {
         opacity: 0,
         y: 20,
         duration: 0.8,
-        ease: 'power2.out',
+        ease: 'power2.out'
       })
     }
   },
 
   applyStopAnimations() {
     const formElement = document.querySelector('.setup-form')
-    if (!formElement)
-      return
+    if (!formElement) return
 
     gsap.from(formElement, {
       opacity: 0,
       y: 20,
       duration: 0.8,
-      ease: 'power2.out',
+      ease: 'power2.out'
     })
-  },
+  }
 }
