@@ -51,17 +51,35 @@
       <el-col :span="12" :xs="12">
         <el-card shadow="hover" class="stat-card">
           <template #header>
-            <div class="stat-header">每秒收入</div>
+            <div class="stat-header">
+              每秒收入<button
+                @click="togglePerSecondRateVisibility"
+                class="visibility-toggle-small"
+                :title="isPerSecondRateVisible ? '隐藏金额' : '显示金额'"
+                type="button"
+              >
+                {{ isPerSecondRateVisible ? '👁️' : '🚫' }}
+              </button>
+            </div>
           </template>
-          <div class="stat-value">¥{{ perSecondRate.toFixed(4) }}/秒</div>
+          <div class="stat-value">¥{{ displayPerSecondRate }}/秒</div>
         </el-card>
       </el-col>
       <el-col :span="12" :xs="12">
         <el-card shadow="hover" class="stat-card">
           <template #header>
-            <div class="stat-header">预计总收入</div>
+            <div class="stat-header">
+              预计总收入<button
+                @click="toggleTotalExpectedVisibility"
+                class="visibility-toggle-small"
+                :title="isTotalExpectedVisible ? '隐藏金额' : '显示金额'"
+                type="button"
+              >
+                {{ isTotalExpectedVisible ? '👁️' : '🚫' }}
+              </button>
+            </div>
           </template>
-          <div class="stat-value">¥{{ totalExpectedEarnings.toFixed(2) }}</div>
+          <div class="stat-value">¥{{ displayTotalExpectedEarnings }}</div>
         </el-card>
       </el-col>
     </el-row>
@@ -117,20 +135,46 @@ export default {
   },
 
   setup(props, { emit }) {
-    const STORAGE_KEY = 'moneyFlowAmountVisible'
+    const STORAGE_KEY_AMOUNT = 'moneyFlowAmountVisible'
+    const STORAGE_KEY_TOTAL_EXPECTED = 'moneyFlowTotalExpectedVisible'
+    const STORAGE_KEY_PER_SECOND_RATE = 'moneyFlowPerSecondRateVisible'
 
-    // 同步读取 localStorage，确保初始值正确
-    let initialVisibility = true
+    // 同步读取 localStorage，确保初始值正确 - 当前已赚取
+    let initialAmountVisibility = true
     try {
-      const saved = localStorage.getItem(STORAGE_KEY)
+      const saved = localStorage.getItem(STORAGE_KEY_AMOUNT)
       if (saved !== null) {
-        initialVisibility = JSON.parse(saved)
+        initialAmountVisibility = JSON.parse(saved)
       }
     } catch (error) {
       console.error('加载金额显示状态失败:', error)
     }
 
-    const isAmountVisible = ref(initialVisibility)
+    // 同步读取 localStorage，确保初始值正确 - 预计总收入
+    let initialTotalExpectedVisibility = true
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_TOTAL_EXPECTED)
+      if (saved !== null) {
+        initialTotalExpectedVisibility = JSON.parse(saved)
+      }
+    } catch (error) {
+      console.error('加载预计总收入显示状态失败:', error)
+    }
+
+    // 同步读取 localStorage，确保初始值正确 - 每秒收入
+    let initialPerSecondRateVisibility = true
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_PER_SECOND_RATE)
+      if (saved !== null) {
+        initialPerSecondRateVisibility = JSON.parse(saved)
+      }
+    } catch (error) {
+      console.error('加载每秒收入显示状态失败:', error)
+    }
+
+    const isAmountVisible = ref(initialAmountVisibility)
+    const isTotalExpectedVisible = ref(initialTotalExpectedVisibility)
+    const isPerSecondRateVisible = ref(initialPerSecondRateVisibility)
 
     const formattedEarnings = computed(() => {
       return new Decimal(props.currentEarnings).toFixed(2)
@@ -149,9 +193,52 @@ export default {
     const toggleAmountVisibility = () => {
       isAmountVisible.value = !isAmountVisible.value
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(isAmountVisible.value))
+        localStorage.setItem(
+          STORAGE_KEY_AMOUNT,
+          JSON.stringify(isAmountVisible.value)
+        )
       } catch (error) {
         console.error('保存金额显示状态失败:', error)
+      }
+    }
+
+    // 预计总收入显示逻辑
+    const displayTotalExpectedEarnings = computed(() => {
+      if (!isTotalExpectedVisible.value) {
+        return '*.**'
+      }
+      return props.totalExpectedEarnings.toFixed(2)
+    })
+
+    const toggleTotalExpectedVisibility = () => {
+      isTotalExpectedVisible.value = !isTotalExpectedVisible.value
+      try {
+        localStorage.setItem(
+          STORAGE_KEY_TOTAL_EXPECTED,
+          JSON.stringify(isTotalExpectedVisible.value)
+        )
+      } catch (error) {
+        console.error('保存预计总收入显示状态失败:', error)
+      }
+    }
+
+    // 每秒收入显示逻辑
+    const displayPerSecondRate = computed(() => {
+      if (!isPerSecondRateVisible.value) {
+        return '*.**'
+      }
+      return props.perSecondRate.toFixed(4)
+    })
+
+    const togglePerSecondRateVisibility = () => {
+      isPerSecondRateVisible.value = !isPerSecondRateVisible.value
+      try {
+        localStorage.setItem(
+          STORAGE_KEY_PER_SECOND_RATE,
+          JSON.stringify(isPerSecondRateVisible.value)
+        )
+      } catch (error) {
+        console.error('保存每秒收入显示状态失败:', error)
       }
     }
 
@@ -202,15 +289,21 @@ export default {
 
     return {
       isAmountVisible,
+      isTotalExpectedVisible,
+      isPerSecondRateVisible,
       formattedEarnings,
       displayEarnings,
+      displayTotalExpectedEarnings,
+      displayPerSecondRate,
       workStatusText,
       workStatusTagType,
       progressStatus,
       totalWorkedTime,
       stopTimer,
       formatTime,
-      toggleAmountVisibility
+      toggleAmountVisibility,
+      toggleTotalExpectedVisibility,
+      togglePerSecondRateVisibility
     }
   }
 }
@@ -337,6 +430,36 @@ export default {
   font-size: 0.9rem;
   opacity: 0.8;
   font-weight: 500;
+  white-space: nowrap;
+}
+
+.visibility-toggle-small {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  padding: 0;
+  margin: 0;
+  margin-left: 0;
+  border-radius: 50%;
+  display: inline-block;
+  width: auto;
+  height: auto;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.8);
+  vertical-align: baseline;
+}
+
+.visibility-toggle-small:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.visibility-toggle-small:active {
+  transform: scale(0.95);
 }
 
 .stat-value {
