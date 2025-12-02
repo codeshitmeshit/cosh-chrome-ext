@@ -17,7 +17,7 @@
         :per-second-rate="perSecondRate"
         :total-expected-earnings="totalExpectedEarnings"
         :time-until-end="timeUntilEnd"
-        @stop-timer="stopTimer"
+        @reset-settings="resetSettings"
       />
     </el-card>
   </div>
@@ -28,6 +28,8 @@ import { computed, onMounted, ref } from 'vue'
 import { Decimal } from 'decimal.js'
 import { TimerManager } from '~/utils/money-flow/timer'
 import { EffectsManager } from '~/utils/money-flow/effects'
+import { StorageUtils } from '~/utils/money-flow/storage'
+import { AppConfig } from '~/config/money-flow'
 import SetupForm from '~/components/money-flow/SetupForm.vue'
 import SalaryDisplay from '~/components/money-flow/SalaryDisplay.vue'
 
@@ -78,9 +80,21 @@ export default {
       elapsedTime.value = timerState.initialState.elapsedTime || 0
     }
 
-    const stopTimer = () => {
+    const resetSettings = () => {
       TimerManager.stopTimer()
+      // 清除保存的设置
+      StorageUtils.saveSettings(null)
+      // 重置状态
       isRunning.value = false
+      timerConfig.value = null
+      currentEarnings.value = 0
+      elapsedTime.value = 0
+      workStatus.value = ''
+      initialWorkProgress.value = 0
+      initialWorkedSeconds.value = 0
+      totalExpectedEarnings.value = 0
+      timeUntilEnd.value = 0
+      perSecondRate.value = 0
     }
 
     const handleTimerUpdate = (state) => {
@@ -90,9 +104,84 @@ export default {
       timeUntilEnd.value = state.timeUntilEnd
     }
 
+    // 根据保存的设置自动启动计时器
+    const autoStartFromSettings = () => {
+      const savedSettings = StorageUtils.loadSettings()
+      if (!savedSettings) {
+        return
+      }
+
+      // 检查设置是否完整
+      const { salaryType, salaryAmount, startTime, endTime } = savedSettings
+      if (
+        !salaryType ||
+        !salaryAmount ||
+        salaryAmount <= 0 ||
+        startTime === undefined ||
+        endTime === undefined
+      ) {
+        return
+      }
+
+      // 计算工作时长
+      let calculatedWorkHours
+      if (endTime >= startTime) {
+        calculatedWorkHours = new Decimal(endTime).minus(startTime).toNumber()
+      } else {
+        calculatedWorkHours = new Decimal(24)
+          .minus(startTime)
+          .plus(endTime)
+          .toNumber()
+      }
+
+      if (calculatedWorkHours <= 0) {
+        return
+      }
+
+      // 计算时薪
+      let hourlyRate = 0
+      const salaryTypeConfig = AppConfig.salaryTypes[salaryType]
+      if (salaryType === 'monthly') {
+        hourlyRate = new Decimal(salaryAmount)
+          .dividedBy(21.75)
+          .dividedBy(calculatedWorkHours)
+          .toNumber()
+      } else if (salaryType === 'daily') {
+        hourlyRate = new Decimal(salaryAmount)
+          .dividedBy(calculatedWorkHours)
+          .toNumber()
+      } else {
+        hourlyRate = parseFloat(salaryAmount)
+      }
+
+      if (hourlyRate <= 0) {
+        return
+      }
+
+      // 计算每秒收入
+      const perSecondRateValue = new Decimal(hourlyRate)
+        .dividedBy(3600)
+        .toNumber()
+
+      // 启动计时器
+      const config = {
+        salaryType,
+        salaryAmount,
+        startTime,
+        endTime,
+        hourlyRate,
+        calculatedWorkHours,
+        perSecondRate: perSecondRateValue
+      }
+
+      startTimer(config)
+    }
+
     onMounted(() => {
       EffectsManager.applyPageAnimations()
       document.documentElement.classList.add('dark')
+      // 尝试自动启动
+      autoStartFromSettings()
     })
 
     return {
@@ -106,7 +195,7 @@ export default {
       timeUntilEnd,
       progressPercentage,
       startTimer,
-      stopTimer
+      resetSettings
     }
   }
 }

@@ -84,8 +84,8 @@
       </el-col>
     </el-row>
 
-    <el-button type="danger" @click="stopTimer" class="w-100" size="large">
-      下班
+    <el-button type="danger" @click="resetSettings" class="w-100" size="large">
+      重新设置
     </el-button>
   </div>
 </template>
@@ -97,7 +97,7 @@ import { TimerManager } from '~/utils/money-flow/timer'
 
 export default {
   name: 'SalaryDisplay',
-  emits: ['stop-timer'],
+  emits: ['reset-settings'],
 
   props: {
     currentEarnings: {
@@ -279,8 +279,8 @@ export default {
         .toNumber()
     })
 
-    const stopTimer = () => {
-      emit('stop-timer')
+    const resetSettings = () => {
+      emit('reset-settings')
     }
 
     const formatTime = (seconds) => {
@@ -299,7 +299,7 @@ export default {
       workStatusTagType,
       progressStatus,
       totalWorkedTime,
-      stopTimer,
+      resetSettings,
       formatTime,
       toggleAmountVisibility,
       toggleTotalExpectedVisibility,
