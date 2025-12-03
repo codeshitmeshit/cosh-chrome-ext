@@ -17,6 +17,7 @@
         :per-second-rate="perSecondRate"
         :total-expected-earnings="totalExpectedEarnings"
         :time-until-end="timeUntilEnd"
+        :can-start-now="canStartNow"
         @reset-settings="resetSettings"
         @start-now="startNow"
       />
@@ -51,6 +52,7 @@ export default {
     const totalExpectedEarnings = ref(0)
     const timeUntilEnd = ref(0)
     const perSecondRate = ref(0)
+    const canStartNow = ref(true)
 
     const progressPercentage = computed(() => {
       if (isRunning.value) {
@@ -66,6 +68,10 @@ export default {
     const startTimer = (config) => {
       timerConfig.value = config
       perSecondRate.value = config.perSecondRate
+
+      // 计算当前是否允许“现在上班”
+      const currentTimeDecimal = TimerManager.getCurrentTimeDecimal()
+      canStartNow.value = currentTimeDecimal <= config.startTime
 
       const timerState = TimerManager.startTimer(config, {
         onUpdate: handleTimerUpdate
@@ -96,6 +102,7 @@ export default {
       totalExpectedEarnings.value = 0
       timeUntilEnd.value = 0
       perSecondRate.value = 0
+      canStartNow.value = true
     }
 
     const handleTimerUpdate = (state) => {
@@ -112,21 +119,26 @@ export default {
 
     // 现在上班：将上班时间调整为当前时间
     const startNow = () => {
-      // 停止当前定时器
-      TimerManager.stopTimer()
-
-      // 获取当前精确时间（不四舍五入，直接使用精确值）
-      // 这样可以确保当前时间 >= 上班时间，已工作时长从0开始
-      const currentTimeDecimal = TimerManager.getCurrentTimeDecimal()
-      // 使用当前精确时间，而不是四舍五入
-      const newStartTime = currentTimeDecimal
-
-      // 加载现有设置
+      // 加载现有设置（先判断是否允许“现在上班”）
       const savedSettings = StorageUtils.loadSettings()
       if (!savedSettings) {
         // 如果没有保存的设置，无法使用此功能
         return
       }
+
+      const currentTimeDecimal = TimerManager.getCurrentTimeDecimal()
+      const { startTime: originalStartTime } = savedSettings
+
+      // 如果当前系统时间已经大于原本设置的上班时间，则不允许“现在上班”
+      if (currentTimeDecimal > originalStartTime) {
+        return
+      }
+
+      // 停止当前定时器
+      TimerManager.stopTimer()
+
+      // 使用当前精确时间作为新的上班时间
+      const newStartTime = currentTimeDecimal
 
       // 更新上班时间为当前精确时间
       const updatedSettings = {
@@ -300,7 +312,8 @@ export default {
       progressPercentage,
       startTimer,
       resetSettings,
-      startNow
+      startNow,
+      canStartNow
     }
   }
 }

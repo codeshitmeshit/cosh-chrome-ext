@@ -86,7 +86,13 @@
 
     <el-row :gutter="8">
       <el-col :span="12">
-        <el-button type="primary" @click="startNow" class="w-100" size="large">
+        <el-button
+          type="primary"
+          @click="startNow"
+          class="w-100"
+          size="large"
+          :disabled="!canStartNow"
+        >
           现在上班
         </el-button>
       </el-col>
@@ -145,6 +151,11 @@ export default {
     timeUntilEnd: {
       type: Number,
       default: 0
+    },
+    // 是否允许点击“现在上班”按钮
+    canStartNow: {
+      type: Boolean,
+      default: true
     }
   },
 
